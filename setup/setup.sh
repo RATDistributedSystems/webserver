@@ -10,3 +10,8 @@ wget https://raw.githubusercontent.com/mholt/caddy/master/caddyhttp/httpserver/p
 python add_plugin.py
 mv plugin.go $GOPATH/src/github.com/mholt/caddy/caddyhttp/httpserver/
 
+# Compile everything
+cd ..
+run go build handler.go
+
+
