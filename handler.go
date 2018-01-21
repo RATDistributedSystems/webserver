@@ -29,7 +29,7 @@ func GetUsername(f FormInput) string {
 		if len(username) > 0 {
 		}
 	}
-
+	return ""
 }
 
 func AddHandler(w http.ResponseWriter, r *http.Request) {
