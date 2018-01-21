@@ -26,7 +26,8 @@ func main() {
 func GetUsername(f FormInput) string {
 	username := f["username"]
 	if username != nil {
-
+		if len(username) > 0 {
+		}
 	}
 
 }
