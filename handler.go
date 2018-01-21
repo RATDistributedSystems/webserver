@@ -3,10 +3,13 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/RATDistributedSystems/mux"
 	"github.com/mholt/caddy/caddy/caddymain"
 )
+
+type FormInput url.Values
 
 func main() {
 	mux.HandleFunc("/add", AddHandler)
@@ -20,7 +23,16 @@ func main() {
 	caddymain.Run()
 }
 
+func GetUsername(f FormInput) string {
+	username := f["username"]
+	if username != nil {
+
+	}
+
+}
+
 func AddHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
 
 }
 
