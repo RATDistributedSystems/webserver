@@ -117,6 +117,7 @@ func getPostInformation(f url.Values) (*Command, error) {
 }
 
 func requestHandler(w http.ResponseWriter, r *http.Request) {
+	ratwebserver.LoadConf()
 	r.ParseForm()
 	command, err := getPostInformation(r.PostForm)
 	if err != nil {
