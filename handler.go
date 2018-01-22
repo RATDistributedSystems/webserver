@@ -71,46 +71,46 @@ func checkForValidCommand(cmd string) (c *Command, e error) {
 }
 
 func getPostInformation(f url.Values) (*Command, error) {
-	m_values := make(map[string]string)
+	mapValues := make(map[string]string)
 
 	// Check Command Format in HTTP POST
-	f_command := f["command"]
-	if f_command == nil || len(f_command) != 1 {
+	commandSplice := f["command"]
+	if commandSplice == nil || len(commandSplice) != 1 {
 		return nil, errors.New("Missing/Invalid Command Structure")
 	}
 
 	// Get All the Parameters out of the POST request
-	m_values["command"] = f_command[0]
-	cmd, err := checkForValidCommand(m_values["command"])
+	mapValues["command"] = commandSplice[0]
+	cmd, err := checkForValidCommand(mapValues["command"])
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Command: %s not found", m_values["command"]))
+		return nil, fmt.Errorf("Command: %s not found", mapValues["command"])
+		//errors.New(fmt.Sprintf())
 	}
-	cmd.values = m_values
+	cmd.values = mapValues
 
 	// Get Username if its required
 	if cmd.usernameRequired {
-		formUsername := f["username"]
-		if formUsername == nil || len(formUsername) != 1 || formUsername[0] == "" {
+		usernameSplice := f["username"]
+		if usernameSplice == nil || len(usernameSplice) != 1 || usernameSplice[0] == "" {
 			return nil, errors.New("Missing/Invalid Required Username")
 		}
-		m_values["username"] = formUsername[0]
+		mapValues["username"] = usernameSplice[0]
 	}
 
 	if cmd.stockIDRequired {
-		f_stock_id := f["stock"]
-		if f_stock_id == nil || len(f_stock_id) != 1 || f_stock_id[0] == "" {
+		stockIDSplice := f["stock"]
+		if stockIDSplice == nil || len(stockIDSplice) != 1 || stockIDSplice[0] == "" {
 			return nil, errors.New("Missing/Invalid Required Stock ID")
 		}
-		m_values["stock"] = f_stock_id[0]
+		mapValues["stock"] = stockIDSplice[0]
 	}
 
 	if cmd.stockAmountRequired {
-		f_stock_amt := f["amount"]
-		if f_stock_amt == nil || len(f_stock_amt) != 1 || f_stock_amt[0] == "" {
+		StockAmtSplice := f["amount"]
+		if StockAmtSplice == nil || len(StockAmtSplice) != 1 || StockAmtSplice[0] == "" {
 			return nil, errors.New("Missing/Invalid Required Stock Amount")
 		}
-		fmt.Println(f_stock_amt[0])
-		m_values["amount"] = f_stock_amt[0]
+		mapValues["amount"] = StockAmtSplice[0]
 	}
 
 	return cmd, nil
@@ -125,6 +125,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if command != nil {
-
+		//do processing
+		ratwebserver.SuccessResponse(w)
 	}
 }
