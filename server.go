@@ -151,9 +151,6 @@ func createCommandStruct(c string, uname bool, stock bool, amt bool) *Command {
 }
 
 func checkForValidCommand(cmd string) (c *Command, e error) {
-	// Like a default case
-	c, e = nil, errors.New("Invalid Command")
-
 	switch cmd {
 	case "ADD":
 		c, e = createCommandStruct(cmd, true, false, true), nil
@@ -187,6 +184,8 @@ func checkForValidCommand(cmd string) (c *Command, e error) {
 		c, e = createCommandStruct(cmd, true, false, false), nil
 	case "DISPLAY_SUMMARY":
 		c, e = createCommandStruct(cmd, true, false, false), nil
+	default:
+		c, e = nil, errors.New("Invalid Command")
 	}
 	return
 }
