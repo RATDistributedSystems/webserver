@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Increase FD imit
+ulimit -n 8192
+
 # Install Deps
 go get github.com/mholt/caddy/caddy
 go get github.com/caddyserver/builds
