@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 
@@ -10,11 +12,6 @@ import (
 	"github.com/RATDistributedSystems/webserver/ratwebserver"
 	"github.com/mholt/caddy/caddy/caddymain"
 )
-
-func main() {
-	mux.HandleFunc("/result", requestHandler)
-	caddymain.Run()
-}
 
 // Command datatype for allowed user commands. Is exported
 type Command struct {
@@ -25,49 +22,57 @@ type Command struct {
 	values              map[string]string
 }
 
-func createCommandStruct(c string, uname bool, stock bool, amt bool) *Command {
-	return &Command{c, uname, stock, amt, nil}
+type configuration struct {
+	address  string
+	port     int
+	protocol string
 }
 
-func checkForValidCommand(cmd string) (c *Command, e error) {
-	// Like a default case
-	c, e = nil, errors.New("Invalid Command")
+// TransactionConfiguration Will get Exported
+var TransactionConfiguration = &configuration{
+	address:  "localhost",
+	port:     44441,
+	protocol: "tcp"}
 
-	switch cmd {
-	case "ADD":
-		c, e = createCommandStruct(cmd, true, false, true), nil
-	case "BUY":
-		c, e = createCommandStruct(cmd, true, true, true), nil
-	case "SELL":
-		c, e = createCommandStruct(cmd, true, true, true), nil
-	case "QUOTE":
-		c, e = createCommandStruct(cmd, true, true, false), nil
-	case "COMMIT_BUY":
-		c, e = createCommandStruct(cmd, true, false, false), nil
-	case "COMMIT_SELL":
-		c, e = createCommandStruct(cmd, true, false, false), nil
-	case "CANCEL_BUY":
-		c, e = createCommandStruct(cmd, true, false, false), nil
-	case "CANCEL_SELL":
-		c, e = createCommandStruct(cmd, true, false, false), nil
-	case "SET_BUY_AMOUNT":
-		c, e = createCommandStruct(cmd, true, true, true), nil
-	case "SET_BUY_TRIGGER":
-		c, e = createCommandStruct(cmd, true, true, true), nil
-	case "CANCEL_SET_BUY":
-		c, e = createCommandStruct(cmd, true, true, false), nil
-	case "SET_SELL_AMOUNT":
-		c, e = createCommandStruct(cmd, true, true, true), nil
-	case "SET_SELL_TRIGGER":
-		c, e = createCommandStruct(cmd, true, true, true), nil
-	case "CANCEL_SET_SELL":
-		c, e = createCommandStruct(cmd, true, true, false), nil
-	case "DUMPLOG":
-		c, e = createCommandStruct(cmd, true, false, false), nil
-	case "DISPLAY_SUMMARY":
-		c, e = createCommandStruct(cmd, true, false, false), nil
+func (c *configuration) loadConf() {
+	f, errIO := ioutil.ReadFile("./tserver.json")
+	if errIO != nil {
+		fmt.Println("Can't read configuration file")
+		return
 	}
+	var configuration interface{}
+	err := json.Unmarshal(f, &configuration)
+	if err != nil {
+		fmt.Printf("Can't parse json: %s", string(f))
+		return
+	}
+
+	config := configuration.(map[string]interface{})
+	// Set struct values
+	c.address = config["address"].(string)
+	c.port = int(config["port"].(float64))
+	c.protocol = config["protocol"].(string)
 	return
+}
+
+func main() {
+	TransactionConfiguration.loadConf()
+	mux.HandleFunc("/result", requestHandler)
+	caddymain.Run()
+}
+
+func requestHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	command, err := getPostInformation(r.PostForm)
+	if err != nil {
+		ratwebserver.ErrorResponse(w, err.Error())
+		return
+	}
+
+	if command != nil {
+
+		ratwebserver.SuccessResponse(w)
+	}
 }
 
 func getPostInformation(f url.Values) (*Command, error) {
@@ -116,17 +121,47 @@ func getPostInformation(f url.Values) (*Command, error) {
 	return cmd, nil
 }
 
-func requestHandler(w http.ResponseWriter, r *http.Request) {
-	ratwebserver.LoadConf()
-	r.ParseForm()
-	command, err := getPostInformation(r.PostForm)
-	if err != nil {
-		ratwebserver.ErrorResponse(w, err.Error())
-		return
-	}
+func createCommandStruct(c string, uname bool, stock bool, amt bool) *Command {
+	return &Command{c, uname, stock, amt, nil}
+}
 
-	if command != nil {
-		//do processing
-		ratwebserver.SuccessResponse(w)
+func checkForValidCommand(cmd string) (c *Command, e error) {
+	// Like a default case
+	c, e = nil, errors.New("Invalid Command")
+
+	switch cmd {
+	case "ADD":
+		c, e = createCommandStruct(cmd, true, false, true), nil
+	case "BUY":
+		c, e = createCommandStruct(cmd, true, true, true), nil
+	case "SELL":
+		c, e = createCommandStruct(cmd, true, true, true), nil
+	case "QUOTE":
+		c, e = createCommandStruct(cmd, true, true, false), nil
+	case "COMMIT_BUY":
+		c, e = createCommandStruct(cmd, true, false, false), nil
+	case "COMMIT_SELL":
+		c, e = createCommandStruct(cmd, true, false, false), nil
+	case "CANCEL_BUY":
+		c, e = createCommandStruct(cmd, true, false, false), nil
+	case "CANCEL_SELL":
+		c, e = createCommandStruct(cmd, true, false, false), nil
+	case "SET_BUY_AMOUNT":
+		c, e = createCommandStruct(cmd, true, true, true), nil
+	case "SET_BUY_TRIGGER":
+		c, e = createCommandStruct(cmd, true, true, true), nil
+	case "CANCEL_SET_BUY":
+		c, e = createCommandStruct(cmd, true, true, false), nil
+	case "SET_SELL_AMOUNT":
+		c, e = createCommandStruct(cmd, true, true, true), nil
+	case "SET_SELL_TRIGGER":
+		c, e = createCommandStruct(cmd, true, true, true), nil
+	case "CANCEL_SET_SELL":
+		c, e = createCommandStruct(cmd, true, true, false), nil
+	case "DUMPLOG":
+		c, e = createCommandStruct(cmd, true, false, false), nil
+	case "DISPLAY_SUMMARY":
+		c, e = createCommandStruct(cmd, true, false, false), nil
 	}
+	return
 }
