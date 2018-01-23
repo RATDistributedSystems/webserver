@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/RATDistributedSystems/mux"
 	"github.com/RATDistributedSystems/webserver/ratwebserver"
@@ -28,8 +30,8 @@ type configuration struct {
 	protocol string
 }
 
-// TransactionConfiguration Will get Exported
-var TransactionConfiguration = &configuration{
+// TServerConf Will get Exported
+var TServerConf = &configuration{
 	address:  "localhost",
 	port:     44441,
 	protocol: "tcp"}
@@ -55,8 +57,24 @@ func (c *configuration) loadConf() {
 	return
 }
 
+func (c Command) generateCMDString() (cmd string) {
+	var buffer bytes.Buffer
+	buffer.WriteString(c.command)
+	if c.usernameRequired {
+		buffer.WriteString(", " + c.values["username"])
+	}
+	if c.stockIDRequired {
+		buffer.WriteString(", " + c.values["stock"])
+	}
+	if c.stockAmountRequired {
+		buffer.WriteString(", " + c.values["amount"])
+	}
+	cmd = buffer.String()
+	return
+}
+
 func main() {
-	TransactionConfiguration.loadConf()
+	TServerConf.loadConf()
 	mux.HandleFunc("/result", requestHandler)
 	caddymain.Run()
 }
@@ -70,7 +88,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if command != nil {
-
+		ratwebserver.SendToTServer(TServerConf.address, TServerConf.port, TServerConf.protocol, command.generateCMDString())
 		ratwebserver.SuccessResponse(w)
 	}
 }
@@ -89,7 +107,6 @@ func getPostInformation(f url.Values) (*Command, error) {
 	cmd, err := checkForValidCommand(mapValues["command"])
 	if err != nil {
 		return nil, fmt.Errorf("Command: %s not found", mapValues["command"])
-		//errors.New(fmt.Sprintf())
 	}
 	cmd.values = mapValues
 
@@ -115,10 +132,18 @@ func getPostInformation(f url.Values) (*Command, error) {
 		if StockAmtSplice == nil || len(StockAmtSplice) != 1 || StockAmtSplice[0] == "" {
 			return nil, errors.New("Missing/Invalid Required Stock Amount")
 		}
+		if notNumeric(StockAmtSplice[0]) {
+			return nil, fmt.Errorf("Amount: %s not valid number", StockAmtSplice[0])
+		}
 		mapValues["amount"] = StockAmtSplice[0]
 	}
 
 	return cmd, nil
+}
+
+func notNumeric(s string) bool {
+	_, err := strconv.ParseFloat(s, 64)
+	return err != nil
 }
 
 func createCommandStruct(c string, uname bool, stock bool, amt bool) *Command {
