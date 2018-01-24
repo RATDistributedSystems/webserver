@@ -30,8 +30,12 @@ The first number after `-p` is the "real" port, while the second number is the d
 
 2. Use Docker pull
 
-Coming soon ...
+`docker pull asinha94/seng468_webserver:<tag>` where `<tag>` is the date of image creation in `ddmmyyyy`.
+
+This can then be run as 
+
+`docker run -p 44440:44440 asinha94/seng468_webserver:24012018`
 
 ## Why isn't stock Caddy sufficient?
 
-Caddy handles all the session management, TLS and all boring stuff, this repo is really just a HTTP handler which serves a few URIs. To do this, this requires us to modify some of the Caddy source code to add in our HTTP middleware.
+Caddy handles all the session management, TLS and all boring stuff, this project is really just a HTTP handler which serves a few URIs. To do this, this requires us to modify some of the Caddy source code to add in our HTTP middleware.
