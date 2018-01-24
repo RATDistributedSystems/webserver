@@ -20,11 +20,13 @@ Our Caddy handler should now be built
 
 1. Build docker image yourself
 
-First make sure the `/setup/setup.sh` has been executed at least once. Now from `setup` execute `/setup-docker-image`
+First make sure the `/setup/setup.sh` has been executed at least once. Now from `setup` execute `/setup-docker-image.sh`
 
 This will create the image `ratwebserver` which can be run as follows
 
 `docker run -p 44440:44440 ratwebserver`
+
+The first number after `-p` is the "real" port, while the second number is the docker port
 
 2. Use Docker pull
 
