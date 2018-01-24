@@ -18,7 +18,17 @@ Our Caddy handler should now be built
 
 ## Use with Docker
 
-Coming soon
+1. Build docker image yourself
+
+First make sure the `/setup/setup.sh` has been executed at least once. Now from `setup` execute `/setup-docker-image`
+
+This will create the image `ratwebserver` which can be run as follows
+
+`docker run -p 44440:44440 ratwebserver`
+
+2. Use Docker pull
+
+Coming soon ...
 
 ## Why isn't stock Caddy sufficient?
 
