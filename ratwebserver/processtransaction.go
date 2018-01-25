@@ -6,11 +6,12 @@ import (
 )
 
 // SendToTServer sends items to transaction server
-func SendToTServer(addr string, port int, protocol string, msg string) {
+func SendToTServer(ip string, port int, protocol string, msg string) {
+	addr := fmt.Sprintf("%s:%d", ip, port)
+	fmt.Printf("Attempting to connect to %s...", addr)
 	conn, err := net.Dial(protocol, addr)
 	if err != nil {
-		fmt.Printf("Couldn't Connect to server %s:%d...\n", addr, port)
+		fmt.Printf("\tCouldn't Connect to server %s:%d...\n", addr, port)
 	}
-	fmt.Fprint(conn, msg)
-
+	fmt.Fprint(conn, msg+"\n")
 }
