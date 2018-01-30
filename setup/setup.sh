@@ -15,7 +15,7 @@ mv plugin.go $GOPATH/src/github.com/mholt/caddy/caddyhttp/httpserver/
 
 # Compile everything
 cd ..
-run go build server.go
+go build server.go
 
 # Now download the frontend
 cd ..
