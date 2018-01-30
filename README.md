@@ -1,17 +1,13 @@
 # The Front-End Webserver
 
-We chose to go with [Caddy](github.com/mholt/caddy), a webserver built entirely in Go so that our entire stack remains in Golang.
+We chose to go with [HttpRouter](github.com/julienschmidt/httprouter), a webserver router built entirely in Go so that our entire stack remains in Golang.
 
 ## How to Setup
 
 ```
 go get github.com/RATDistributedSystems/webserver
-
-# We will get an error but that is OK
-# we just want to download it into the right place
-
-cd $GOHOME/github.com/RATDistributedSystems/webserver/setup
-./setup.sh
+cd $GOHOME/github.com/RATDistributedSystems/webserver
+go build server.go
 ```
 
 Our Caddy handler should now be built
@@ -20,7 +16,7 @@ Our Caddy handler should now be built
 
 1. Build docker image yourself
 
-First make sure the `/setup/setup.sh` has been executed at least once. Now from `setup` execute `/setup-docker-image.sh`
+From `setup` execute `/setup-docker-image.sh`
 
 This will create the image `ratwebserver` which can be run as follows
 
@@ -35,7 +31,3 @@ The first number after `-p` is the "real" port, while the second number is the d
 This can then be run as 
 
 `docker run -p 44440:44440 asinha94/seng468_webserver:24012018`
-
-## Why isn't stock Caddy sufficient?
-
-Caddy handles all the session management, TLS and all boring stuff, this project is really just a HTTP handler which serves a few URIs. To do this, this requires us to modify some of the Caddy source code to add in our HTTP middleware.
