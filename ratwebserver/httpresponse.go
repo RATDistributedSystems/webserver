@@ -3,32 +3,37 @@ package ratwebserver
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
+
+	"github.com/julienschmidt/httprouter"
 )
 
-// LoadIndex sends back the index as the response
-func LoadIndex(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "text/html")
+func LogHTTPRequest(r *http.Request) {
+	log.Printf("%s request for %s Origin: %s", r.Method, r.URL, r.RemoteAddr)
+}
 
-	index, err := os.Open("index.html")
-	if err != nil {
-		w.Write([]byte("<html><body><a href=\"/\">Back to Homepage</a></body></html>"))
-		return
-	}
+func getFile(p string) string {
+	f := fmt.Sprintf("%s/index.html", p)
+	return filepath.Join(usedConfiguration.GetHTMLLocation(), f)
+}
+
+func GetURL(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	LogHTTPRequest(r)
+	w.Header().Set("Content-Type", "text/html")
+	filename := getFile(r.URL.String())
+	index, _ := os.Open(filename)
 	defer index.Close()
 	indexString, _ := ioutil.ReadAll(index)
 	w.Write(indexString)
 }
 
 func addBodyToHTML(htmlTags string) string {
-	htmlTemplate, err := ioutil.ReadFile("./templates/index.html")
-	if err != nil {
-		fmt.Println("Couldn't Find file ./templates/index.html")
-		return fmt.Sprintf("<html><body>%s</body></html>", htmlTags)
-	}
-
+	f := getFile("/templates")
+	htmlTemplate, _ := ioutil.ReadFile(f)
 	lines := strings.Split(string(htmlTemplate), "\n")
 	lines = append(lines, htmlTags)
 	lines = append(lines, "</body>\n</html>")
