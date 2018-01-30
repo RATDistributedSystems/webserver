@@ -2,18 +2,56 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 
-	"github.com/RATDistributedSystems/mux"
 	"github.com/RATDistributedSystems/webserver/ratwebserver"
-	"github.com/mholt/caddy/caddy/caddymain"
+	"github.com/julienschmidt/httprouter"
 )
+
+var serverConfig *ratwebserver.Configuration
+
+func main() {
+	serverConfig = ratwebserver.LoadConf()
+	log.Printf("Serving on %s", serverConfig.GetServerAddress())
+	log.Printf("HTTP Requests will be passed onto %s", serverConfig.GetTransactionAddress())
+	router := httprouter.New()
+	router.GET("/", ratwebserver.GetURL)
+	router.GET("/add", ratwebserver.GetURL)
+	router.GET("/buy", ratwebserver.GetURL)
+	router.GET("/buytrigger", ratwebserver.GetURL)
+	router.GET("/commit", ratwebserver.GetURL)
+	router.GET("/quote", ratwebserver.GetURL)
+	router.GET("/sell", ratwebserver.GetURL)
+	router.GET("/selltrigger", ratwebserver.GetURL)
+	router.GET("/summary", ratwebserver.GetURL)
+	router.POST("/result", requestHandler)
+	log.Fatal(http.ListenAndServe(serverConfig.GetServerAddress(), router))
+
+}
+
+func requestHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	ratwebserver.LogHTTPRequest(r)
+	r.ParseForm()
+	command, err := getPostInformation(r.PostForm)
+	if err != nil {
+		ratwebserver.ErrorResponse(w, err.Error())
+		return
+	}
+
+	if command != nil {
+		err := ratwebserver.SendToTServer(serverConfig.GetTransactionAddress(), serverConfig.GetTransactionProtocol(), command.generateCMDString())
+		if err != nil {
+			ratwebserver.ErrorResponse(w, "Couldn't Process Request. Try again later")
+			return
+		}
+		ratwebserver.SuccessResponse(w)
+	}
+}
 
 // Command datatype for allowed user commands. Is exported
 type Command struct {
@@ -22,39 +60,6 @@ type Command struct {
 	stockIDRequired     bool
 	stockAmountRequired bool
 	values              map[string]string
-}
-
-type configuration struct {
-	address  string
-	port     int
-	protocol string
-}
-
-// TServerConf Will get Exported
-var TServerConf = &configuration{
-	address:  "localhost",
-	port:     44441,
-	protocol: "tcp"}
-
-func (c *configuration) loadConf() {
-	f, errIO := ioutil.ReadFile("./tserver.json")
-	if errIO != nil {
-		fmt.Println("Can't read configuration file")
-		return
-	}
-	var configuration interface{}
-	err := json.Unmarshal(f, &configuration)
-	if err != nil {
-		fmt.Printf("Can't parse json: %s", string(f))
-		return
-	}
-
-	config := configuration.(map[string]interface{})
-	// Set struct values
-	c.address = config["address"].(string)
-	c.port = int(config["port"].(float64))
-	c.protocol = config["protocol"].(string)
-	return
 }
 
 func (c Command) generateCMDString() (cmd string) {
@@ -71,26 +76,6 @@ func (c Command) generateCMDString() (cmd string) {
 	}
 	cmd = buffer.String()
 	return
-}
-
-func main() {
-	TServerConf.loadConf()
-	mux.HandleFunc("/result", requestHandler)
-	caddymain.Run()
-}
-
-func requestHandler(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	command, err := getPostInformation(r.PostForm)
-	if err != nil {
-		ratwebserver.ErrorResponse(w, err.Error())
-		return
-	}
-
-	if command != nil {
-		ratwebserver.SendToTServer(TServerConf.address, TServerConf.port, TServerConf.protocol, command.generateCMDString())
-		ratwebserver.SuccessResponse(w)
-	}
 }
 
 func getPostInformation(f url.Values) (*Command, error) {
