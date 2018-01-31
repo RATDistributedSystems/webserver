@@ -1,16 +1,22 @@
 {
-    "webserver" : {
-        "address": "0.0.0.0",
-        "port": "44440",
-        "protocol": "http"
+    "serverConfigs" : {
+        "webserver" : {
+            "address": "0.0.0.0",
+            "port": "44440",
+            "protocol": "http"
+        },
+
+        "transaction" : {
+            "address": "localhost",
+            "port": "44441",
+            "protocol": "tcp"
+        }
     },
 
-    "transaction" : {
-        "address": "localhost",
-        "port": "44441",
-        "protocol": "tcp"
-    },
+    "misc" : {
+        "htmlLoc" : "../frontend/"
+    }
 
-    "htmlLoc" : "../frontend/"
+    
     
 }

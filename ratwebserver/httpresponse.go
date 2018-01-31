@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/RATDistributedSystems/utilities"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -18,7 +19,8 @@ func LogHTTPRequest(r *http.Request) {
 
 func getFile(p string) string {
 	f := fmt.Sprintf("%s/index.html", p)
-	return filepath.Join(usedConfiguration.GetHTMLLocation(), f)
+	loc := utilities.PackageConfiguration.GetValue("htmlLoc")
+	return filepath.Join(loc, f)
 }
 
 func GetURL(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
