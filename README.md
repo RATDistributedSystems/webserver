@@ -1,6 +1,6 @@
 # The Front-End Webserver
 
-We chose to go with [HttpRouter](github.com/julienschmidt/httprouter), a webserver router built entirely in Go so that our entire stack remains in Golang.
+We chose to go with [HttpRouter](http://github.com/julienschmidt/httprouter), a webserver router built entirely in Go so that our entire stack remains in Golang.
 
 ## How to Setup
 
