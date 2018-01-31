@@ -15,9 +15,10 @@ func main() {
 	serverConfig = utilities.LoadConfigs("config.json")
 	addrWS, _ := serverConfig.GetServerDetails("webserver")
 	addrTS, _ := serverConfig.GetServerDetails("transaction")
-	// Enable handlers
 	log.Printf("Serving on %s", addrWS)
 	log.Printf("HTTP Requests will be passed onto %s", addrTS)
+
+	// Enable handlers
 	router := httprouter.New()
 	router.GET("/", ratwebserver.GetURL)
 	router.GET("/add", ratwebserver.GetURL)
