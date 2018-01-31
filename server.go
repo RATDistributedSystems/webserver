@@ -29,27 +29,7 @@ func main() {
 	router.GET("/sell", ratwebserver.GetURL)
 	router.GET("/selltrigger", ratwebserver.GetURL)
 	router.GET("/summary", ratwebserver.GetURL)
-	router.POST("/result", requestHandler)
+	router.POST("/result", ratwebserver.RequestHandler)
 	log.Fatal(http.ListenAndServe(addrWS, router))
 
-}
-
-func requestHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	ratwebserver.LogHTTPRequest(r)
-	r.ParseForm()
-	command, err := ratwebserver.GetPostInformation(r.PostForm)
-	if err != nil {
-		ratwebserver.ErrorResponse(w, err.Error())
-		return
-	}
-
-	if command != nil {
-		addr, protocol := serverConfig.GetServerDetails("transaction")
-		err := ratwebserver.SendToTServer(addr, protocol, command.String())
-		if err != nil {
-			ratwebserver.ErrorResponse(w, "Couldn't Process Request. Try again later")
-			return
-		}
-		ratwebserver.SuccessResponse(w)
-	}
 }

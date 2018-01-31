@@ -6,36 +6,37 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/RATDistributedSystems/utilities"
+	"github.com/julienschmidt/httprouter"
 )
 
-// Command datatype for allowed user commands. Is exported
-type Command struct {
-	command             string
-	usernameRequired    bool
-	stockIDRequired     bool
-	stockAmountRequired bool
-	values              map[string]string
+var config = utilities.PackageConfiguration
+
+func RequestHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	LogHTTPRequest(r)
+	r.ParseForm()
+	command, err := getPostInformation(r.PostForm)
+	if err != nil {
+		ErrorResponse(w, err.Error())
+		return
+	}
+
+	if command != nil {
+		addr, protocol := config.GetServerDetails("transaction")
+		err := sendToTServer(addr, protocol, command.String())
+		if err != nil {
+			ErrorResponse(w, "Couldn't Process Request. Try again later")
+			return
+		}
+		SuccessResponse(w)
+	}
 }
 
-func (c Command) String() (cmd string) {
-	var buffer bytes.Buffer
-	buffer.WriteString(c.command)
-	if c.usernameRequired {
-		buffer.WriteString(", " + c.values["username"])
-	}
-	if c.stockIDRequired {
-		buffer.WriteString(", " + c.values["stock"])
-	}
-	if c.stockAmountRequired {
-		buffer.WriteString(", " + c.values["amount"])
-	}
-	cmd = buffer.String()
-	return
-}
-
-func GetPostInformation(f url.Values) (*Command, error) {
+func getPostInformation(f url.Values) (*Command, error) {
 	mapValues := make(map[string]string)
 
 	// Check Command Format in HTTP POST
@@ -133,7 +134,7 @@ func checkForValidCommand(cmd string) (c *Command, e error) {
 }
 
 // SendToTServer sends items to transaction server
-func SendToTServer(addr string, protocol string, msg string) error {
+func sendToTServer(addr string, protocol string, msg string) error {
 	log.Printf("Sending '%s' to %s", msg, addr)
 	conn, err := net.Dial(protocol, addr)
 	if err != nil {
@@ -142,4 +143,28 @@ func SendToTServer(addr string, protocol string, msg string) error {
 	}
 	fmt.Fprint(conn, msg+"\n")
 	return nil
+}
+
+type Command struct {
+	command             string
+	usernameRequired    bool
+	stockIDRequired     bool
+	stockAmountRequired bool
+	values              map[string]string
+}
+
+func (c Command) String() (cmd string) {
+	var buffer bytes.Buffer
+	buffer.WriteString(c.command)
+	if c.usernameRequired {
+		buffer.WriteString(", " + c.values["username"])
+	}
+	if c.stockIDRequired {
+		buffer.WriteString(", " + c.values["stock"])
+	}
+	if c.stockAmountRequired {
+		buffer.WriteString(", " + c.values["amount"])
+	}
+	cmd = buffer.String()
+	return
 }
