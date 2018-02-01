@@ -9,10 +9,9 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-var serverConfig *utilities.Configuration
+var serverConfig = utilities.GetConfigurationFile("config.json")
 
 func main() {
-	serverConfig = utilities.LoadConfigs("config.json")
 	addrWS, _ := serverConfig.GetServerDetails("webserver")
 	addrTS, _ := serverConfig.GetServerDetails("transaction")
 	log.Printf("Serving on %s", addrWS)
