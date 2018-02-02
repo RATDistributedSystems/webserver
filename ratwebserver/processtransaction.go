@@ -10,13 +10,36 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"unicode"
 
 	"github.com/RATDistributedSystems/utilities"
 	"github.com/julienschmidt/httprouter"
 )
 
 var config = utilities.PackageConfiguration
+
+type Command struct {
+	command             string
+	usernameRequired    bool
+	stockIDRequired     bool
+	stockAmountRequired bool
+	values              map[string]string
+}
+
+func (c Command) String() (cmd string) {
+	var buffer bytes.Buffer
+	buffer.WriteString(c.command)
+	if c.usernameRequired {
+		buffer.WriteString("," + c.values["username"])
+	}
+	if c.stockIDRequired {
+		buffer.WriteString("," + c.values["stock"])
+	}
+	if c.stockAmountRequired {
+		buffer.WriteString("," + c.values["amount"])
+	}
+	cmd = buffer.String()
+	return
+}
 
 func RequestHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	LogHTTPRequest(r)
@@ -48,7 +71,7 @@ func getPostInformation(f url.Values) (*Command, error) {
 	}
 
 	// Get All the Parameters out of the POST request
-	mapValues["command"] = commandSplice[0]
+	mapValues["command"] = strings.TrimSpace(commandSplice[0])
 	cmd, err := checkForValidCommand(mapValues["command"])
 	if err != nil {
 		return nil, fmt.Errorf("Command: %s not found", mapValues["command"])
@@ -61,7 +84,7 @@ func getPostInformation(f url.Values) (*Command, error) {
 		if usernameSplice == nil || len(usernameSplice) != 1 || usernameSplice[0] == "" {
 			return nil, errors.New("Missing/Invalid Required Username")
 		}
-		mapValues["username"] = usernameSplice[0]
+		mapValues["username"] = strings.TrimSpace(usernameSplice[0])
 	}
 
 	if cmd.stockIDRequired {
@@ -69,7 +92,7 @@ func getPostInformation(f url.Values) (*Command, error) {
 		if stockIDSplice == nil || len(stockIDSplice) != 1 || stockIDSplice[0] == "" {
 			return nil, errors.New("Missing/Invalid Required Stock ID")
 		}
-		mapValues["stock"] = stockIDSplice[0]
+		mapValues["stock"] = strings.TrimSpace(stockIDSplice[0])
 	}
 
 	if cmd.stockAmountRequired {
@@ -80,7 +103,7 @@ func getPostInformation(f url.Values) (*Command, error) {
 		if notNumeric(StockAmtSplice[0]) {
 			return nil, fmt.Errorf("Amount: %s not valid number", StockAmtSplice[0])
 		}
-		mapValues["amount"] = StockAmtSplice[0]
+		mapValues["amount"] = strings.TrimSpace(StockAmtSplice[0])
 	}
 
 	return cmd, nil
@@ -137,12 +160,6 @@ func checkForValidCommand(cmd string) (c *Command, e error) {
 
 // SendToTServer sends items to transaction server
 func sendToTServer(addr string, protocol string, msg string) error {
-	strings.Map(func(r rune) rune {
-  if unicode.IsSpace(r) {
-    return -1
-  }
-  return r
-}, msg)
 	log.Printf("Sending '%s' to %s", msg, addr)
 	conn, err := net.Dial(protocol, addr)
 	if err != nil {
@@ -151,28 +168,4 @@ func sendToTServer(addr string, protocol string, msg string) error {
 	}
 	fmt.Fprint(conn, msg+"\n")
 	return nil
-}
-
-type Command struct {
-	command             string
-	usernameRequired    bool
-	stockIDRequired     bool
-	stockAmountRequired bool
-	values              map[string]string
-}
-
-func (c Command) String() (cmd string) {
-	var buffer bytes.Buffer
-	buffer.WriteString(c.command)
-	if c.usernameRequired {
-		buffer.WriteString("," + c.values["username"])
-	}
-	if c.stockIDRequired {
-		buffer.WriteString("," + c.values["stock"])
-	}
-	if c.stockAmountRequired {
-		buffer.WriteString("," + c.values["amount"])
-	}
-	cmd = buffer.String()
-	return
 }
