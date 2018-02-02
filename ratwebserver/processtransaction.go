@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
+	"unicode"
 
 	"github.com/RATDistributedSystems/utilities"
 	"github.com/julienschmidt/httprouter"
@@ -135,6 +137,12 @@ func checkForValidCommand(cmd string) (c *Command, e error) {
 
 // SendToTServer sends items to transaction server
 func sendToTServer(addr string, protocol string, msg string) error {
+	strings.Map(func(r rune) rune {
+  if unicode.IsSpace(r) {
+    return -1
+  }
+  return r
+}, msg)
 	log.Printf("Sending '%s' to %s", msg, addr)
 	conn, err := net.Dial(protocol, addr)
 	if err != nil {
@@ -157,13 +165,13 @@ func (c Command) String() (cmd string) {
 	var buffer bytes.Buffer
 	buffer.WriteString(c.command)
 	if c.usernameRequired {
-		buffer.WriteString(", " + c.values["username"])
+		buffer.WriteString("," + c.values["username"])
 	}
 	if c.stockIDRequired {
-		buffer.WriteString(", " + c.values["stock"])
+		buffer.WriteString("," + c.values["stock"])
 	}
 	if c.stockAmountRequired {
-		buffer.WriteString(", " + c.values["amount"])
+		buffer.WriteString("," + c.values["amount"])
 	}
 	cmd = buffer.String()
 	return
