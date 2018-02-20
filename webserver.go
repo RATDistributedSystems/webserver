@@ -12,7 +12,7 @@ import (
 var serverConfig = utilities.GetConfigurationFile("config.json")
 
 func main() {
-	addrWS, _ := serverConfig.GetServerDetails("webserver")
+	addrWS, _ := serverConfig.GetListnerDetails("webserver")
 	addrTS, _ := serverConfig.GetServerDetails("transaction")
 	log.Printf("Serving on %s", addrWS)
 	log.Printf("HTTP Requests will be passed onto %s", addrTS)
