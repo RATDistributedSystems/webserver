@@ -3,20 +3,28 @@
         "webserver" : {
             "address": "0.0.0.0",
             "port": "44440",
-            "protocol": "http"
+            "protocol": "tcp"
         },
-
         "transaction" : {
             "address": "localhost",
             "port": "44441",
+            "protocol": "tcp"
+        }, 
+        "audit" : {
+            "address": "localhost",
+            "port": "44442",
+            "protocol": "tcp"
+        }, 
+        "quote" : {
+            "address": "quoteserve",
+            "port": "44446",
             "protocol": "tcp"
         }
     },
 
     "misc" : {
-        "htmlLoc" : "../frontend/"
-    }
-
-    
-    
+        "cassandra_ip" : "localhost",
+        "cassandra_keyspace" : "userdb",
+        "cassandra_proto" : "4"
+    } 
 }

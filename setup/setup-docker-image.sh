@@ -8,7 +8,7 @@ git clone https://github.com/RATDistributedSystems/frontend
 docker run --rm -it -v "$GOPATH":/gopath -v "$(pwd)":/app -e "GOPATH=/gopath" -w /app golang:1.9 sh -c 'CGO_ENABLED=0 go build -a --installsuffix cgo --ldflags="-s" -o webserver'
 
 # Build the image
-docker build -t ratwebserver .
+docker build -t webserver .
 
 # Delete the garbage
-rm -rf frontend server
+rm -rf frontend webserver
