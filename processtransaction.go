@@ -1,21 +1,13 @@
-package ratwebserver
+package main
 
 import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log"
-	"net"
-	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
-
-	"github.com/RATDistributedSystems/utilities"
-	"github.com/julienschmidt/httprouter"
 )
-
-var config = utilities.PackageConfiguration
 
 type Command struct {
 	command             string
@@ -39,26 +31,6 @@ func (c Command) String() (cmd string) {
 	}
 	cmd = buffer.String()
 	return
-}
-
-func RequestHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	LogHTTPRequest(r)
-	r.ParseForm()
-	command, err := getPostInformation(r.PostForm)
-	if err != nil {
-		ErrorResponse(w, err.Error())
-		return
-	}
-
-	if command != nil {
-		addr, protocol := config.GetServerDetails("transaction")
-		err := sendToTServer(addr, protocol, command.String())
-		if err != nil {
-			ErrorResponse(w, "Couldn't Process Request. Try again later")
-			return
-		}
-		SuccessResponse(w)
-	}
 }
 
 func getPostInformation(f url.Values) (*Command, error) {
@@ -156,16 +128,4 @@ func checkForValidCommand(cmd string) (c *Command, e error) {
 		c, e = nil, errors.New("Invalid Command")
 	}
 	return
-}
-
-// SendToTServer sends items to transaction server
-func sendToTServer(addr string, protocol string, msg string) error {
-	log.Printf("Sending '%s' to %s", msg, addr)
-	conn, err := net.Dial(protocol, addr)
-	if err != nil {
-		log.Printf("Request failed. Couldn't Connect to server %s...", addr)
-		return err
-	}
-	fmt.Fprint(conn, msg+"\n")
-	return nil
 }

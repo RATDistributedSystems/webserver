@@ -1,41 +1,41 @@
-package ratwebserver
+package main
 
 import (
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/RATDistributedSystems/utilities"
 	"github.com/julienschmidt/httprouter"
 )
 
-func LogHTTPRequest(r *http.Request) {
-	log.Printf("%s request for %s Origin: %s", r.Method, r.URL, r.RemoteAddr)
-}
+var (
+	fileCache = make(map[string][]byte)
+)
 
-func getFile(p string) string {
+func getFileAsBytes(p string) []byte {
+	if f, exists := fileCache[p]; exists {
+		return f
+	}
+
 	f := fmt.Sprintf("%s/index.html", p)
-	loc := utilities.PackageConfiguration.GetValue("htmlLoc")
-	return filepath.Join(loc, f)
+	fp := filepath.Join(config.GetValue("frontend_location"), f)
+	fileBytes, _ := ioutil.ReadFile(fp)
+	fileCache[p] = fileBytes
+	return fileBytes
 }
 
-func GetURL(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	LogHTTPRequest(r)
+func getURL(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	log.Printf("%s request for %s Origin: %s", r.Method, r.URL, r.RemoteAddr)
 	w.Header().Set("Content-Type", "text/html")
-	filename := getFile(r.URL.String())
-	index, _ := os.Open(filename)
-	defer index.Close()
-	indexString, _ := ioutil.ReadAll(index)
-	w.Write(indexString)
+	index := getFileAsBytes(r.URL.String())
+	w.Write(index)
 }
 
 func addBodyToHTML(htmlTags string) string {
-	f := getFile("/templates")
-	htmlTemplate, _ := ioutil.ReadFile(f)
+	htmlTemplate := getFileAsBytes("/templates")
 	lines := strings.Split(string(htmlTemplate), "\n")
 	lines = append(lines, htmlTags)
 	lines = append(lines, "</body>\n</html>")
